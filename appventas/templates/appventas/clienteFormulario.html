@@ -1,0 +1,27 @@
+{% extends "appventas/padre.html" %}
+{% load static %}
+
+{% block contenidoQueCmabia %}
+<h5>Registro Clientes</h5>
+    <form action=""  method="POST">
+        {% csrf_token %}
+       <table>
+        {{ formulario.as_table}}
+       </table>
+       <input type="submit" value="Guardar">
+    </form>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+  
+{% endblock contenidoQueCmabia %}
