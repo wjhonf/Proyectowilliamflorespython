@@ -1,0 +1,60 @@
+{% extends 'appventas/padre.html' %}
+
+{% load static %}
+
+{% block title %} Registrarse {% endblock title %}
+
+{% block contenidoQueCmabia %}
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title text-center">Registrarse</h5>
+                    </div>
+                    <div class="card-body">
+
+                        {% if msg_register %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ msg_register }}
+                        </div>
+                        {% endif %}
+
+                        <form method="post">
+                            {% csrf_token %}
+
+                            <div class="mb-3">
+                                <label for="id_username" class="form-label">Username:</label>
+                                {{ form.username }}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_email" class="form-label">Email:</label>
+                                {{ form.email }}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_password1" class="form-label">Contraseña:</label>
+                                {{ form.password1 }}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_password2" class="form-label">Repetir contraseña:</label>
+                                {{ form.password2 }}
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success btn-block">Registrarse</button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+{% endblock contenidoQueCmabia %}

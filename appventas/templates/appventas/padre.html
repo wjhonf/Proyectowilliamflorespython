@@ -8,10 +8,17 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
     <link rel="icon" href="{% static 'assets/img/favicon.ico' %}" type="image/x-icon">
-
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <title>WJ Servicio Tecnologicos</title>
 </head>
+<style>
+  .swal-button-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+  }
+</style>
 <body>
     <nav class="navbar navbar-expand-lg bg-success" data-bs-theme="dark">
         <div class="container-fluid">
@@ -21,19 +28,81 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            {% if request.user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="{% url 'Inicio' %}">Inicio</a>
+            </li>
+            <li class="nav-item dropdown ">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Registros
+              </a>
+              <ul class="dropdown-menu bg-success" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="{% url 'EquipoForm' %}">Registro - Equipos</a></li>
+                <li><a class="dropdown-item" href="{% url 'list_equipos' %}">Lista - Equipos</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{% url 'CLienteForm' %}">Registro - Clientes</a></li>
+              </ul>
+            </li>
+
+            <li class="nav-item dropdown ">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Ventas - Equipos
+              </a>
+              <ul class="dropdown-menu bg-success" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="{% url 'catalog_equipos' %}">Regitrar - Venta</a></li>
+                <li><hr class="dropdown-divider"></li>
+              </ul>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="{% url 'Nosotros' %}">Nosotros</a>
+            </li>
+
+            {% else %}
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="{% url 'Inicio' %}">Inicio</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="{% url 'Nosotros' %}">Nosotros</a>
+            </li>
+             
+            {% endif %}
+            
+             
+            </ul>
+            <ul class="navbar-nav">
               <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="{% url 'Inicio' %}">Inicio</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="{% url 'EquipoForm2' %}">Registro Equipos</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="{% url 'Buscar' %}">Buscar Equipos</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="{% url 'CLienteForm' %}">Registro Cliente</a>
+                <a href="#" class="btn btn-warning d-none" id="micarrito">
+                  <i class="bi bi-cart3"></i>Mi Carrito
+                  <span class="badge text-bg-danger" id="contadorCarrito">0</span>
+                </a>
               </li>
             </ul>
+            {% if request.user.is_authenticated %}
+                <div class="dropdown">
+                      <button class="btn btn-warning dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                          {{ request.user.username }}
+                      </button>
+                        <ul class="dropdown-menu bg-success" aria-labelledby="dropdownMenuButton1">
+                            <li><a class="dropdown-item" href="{% url 'Edit' %}">Editar cuenta</a></li>
+                            <li>
+                              <form action="{% url 'Logout' %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item" style="border: none; background: none; cursor: pointer;">
+                                    Cerrar Sesión
+                                </button>
+                            </form>
+                            </li>
+                        </ul>
+              </div>
+          {% else %}
+          <div class="dropdown">
+            <button class="btn btn-warning dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                Acceso al sistema
+            </button>
+            <ul class="dropdown-menu bg-success" aria-labelledby="dropdownMenuButton1">
+                <li><a class="dropdown-item" href="{% url 'Login' %}">Inciar Sesión</a></li>
+                <li><a class="dropdown-item" href="{% url 'Register' %}">Crear cuenta</a></li>
+            </ul>
+        </div>
+        {% endif %}
           </div>
         </div>
       </nav>

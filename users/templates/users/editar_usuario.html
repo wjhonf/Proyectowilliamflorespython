@@ -1,0 +1,21 @@
+{% extends 'appventas/padre.html' %}
+
+{% load static %}
+
+{% block title %} Login {% endblock title %}
+
+{% block contenidoQueCmabia %}
+     <h5>Editar Perfil:  {{usuario}}</h5>
+     
+ 
+     <form action="" method="POST">{% csrf_token %}
+         <table>
+ 
+             {{ miFormulario.as_table }}
+ 
+         </table>
+ 
+         <input type="submit", value="Enviar">
+ 
+     </form>   
+{% endblock contenidoQueCmabia %}

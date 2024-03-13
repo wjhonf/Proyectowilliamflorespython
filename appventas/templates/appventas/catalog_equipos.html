@@ -1,0 +1,301 @@
+{% extends "appventas/padre.html" %}
+{% load static %}
+{% block contenidoQueCmabia %}
+<div class="container">
+    <h5>Buscar Equipo</h5>
+    <form action="" method="POST">
+        {% csrf_token %}
+        <table>
+            {{ formulario.as_table }}
+        </table>
+        <br>
+        <button type="submit" class="btn btn-success">Buscar</button>
+    </form>
+    <br>
+    <div class="row" id="equiposContainer">
+    </div>
+</div>
+<div class="modal fade" id="carritoModal" tabindex="-1" aria-labelledby="carritoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg"> 
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="carritoModalLabel">Ventas Equipo Informático </h5> 
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>Datos del Cliente</h6>
+                        <div class="mb-3">
+                            <label  class="form-label">Nombre</label>
+                            <select class="form-select" id="clientes" name="clientes" required>
+                                <option value="" selected>Seleccione un cliente</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="clienteEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="clienteEmail" placeholder="Ingrese su email" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Datos de la Tarjeta</h6>
+                        <div class="mb-3">
+                            <label for="tarjetaNumero" class="form-label">Número de Tarjeta</label>
+                            <input type="text" class="form-control" id="tarjetaNumero" placeholder="Ingrese el número de tarjeta" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tarjetaExpiracion" class="form-label">Fecha de Expiración</label>
+                            <input type="text" class="form-control" id="tarjetaExpiracion" placeholder="Ingrese la fecha de expiración" required>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Descripción</th>
+                                <th>Cantidad</th>
+                                <th>Precio</th>
+                                <th>Importe</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="equiposCarrito">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 text-end">
+                        <h5>Subtotal: <span id="subtotal"></span></h5>
+                        <h5>IGV (18%): <span id="igv"></span></h5>
+                        <h5>Total: <span id="total"></span></h5>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="cancelarBtn" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="guardarBtn">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var equipos = JSON.parse('{{ equipos_json|escapejs }}');
+    let contador = 0;
+    let equiposAgregados = [];
+    function agregarEquipo(id) {
+        let equipoExistente = equiposAgregados.find(equipo => equipo.pk === id);
+        if (equipoExistente) {
+            swal("Sistema de Ventas.", "Este equipo ya ha sido agregado al carrito.", "warning");
+        } else {
+            contador++;
+            let equipo = equipos.find(e => e.pk === id);
+            equiposAgregados.push(equipo);
+            document.getElementById("contadorCarrito").innerText = contador;
+            if (contador > 0) {
+                document.getElementById("micarrito").classList.remove("d-none");
+            }
+        }
+    }
+    
+    function generarHTMLEquipos() {
+        var equiposHTML = '';
+        equipos.forEach(function(equipo) {
+            equiposHTML += `
+                <div class="col-md-4">
+                    <div class="card mb-3">
+                        <img src="/${equipo.fields.imagen}" class="card-img-top" alt="${equipo.fields.nombre}">
+                        <div class="card-body">
+                            <h5 class="card-title">${equipo.fields.nombre}</h5>
+                            <p class="card-text">${equipo.fields.descripcion}</p>
+                            <p class="card-text"><strong>Precio:</strong> $${equipo.fields.precio}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <button type="button" class="btn btn-sm btn-warning btn-add"  onclick="agregarEquipo(${equipo.pk})">
+                                    <i class="bi bi-pencil-square"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        document.getElementById('equiposContainer').innerHTML = equiposHTML;
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        generarHTMLEquipos();
+        obtenerClientes();   
+    });
+    document.getElementById('cancelarBtn').addEventListener('click', function() {
+        contador = 0;
+        equiposAgregados = [];
+    
+        document.getElementById("contadorCarrito").innerText = contador;
+        document.getElementById('equiposCarrito').innerHTML = '';
+        $('#carritoModal').modal('hide');
+    });
+    
+    document.getElementById('micarrito').addEventListener('click', function() {
+        if (contador === 0) {
+            swal("Sistema de Ventas.", "Debes seleccionar al menos un equipo.", "warning");
+            return; 
+        }
+        let tablaEquipos = '';
+        let subtotal = 0;
+        equiposAgregados.forEach(function(equipo) {
+          const cantidad = equipo.cantidad || 1;
+          const importe = equipo.fields.precio * cantidad;
+          subtotal += importe;
+          tablaEquipos += `
+            <tr data-id="${equipo.pk}">
+                <td>${equipo.fields.nombre}</td>
+                <td>${equipo.fields.descripcion}</td>
+                <td>
+                    <input type="number" class="form-control cantidad" value="${cantidad}" min="1" data-id="${equipo.pk}">
+                </td>
+                <td>${equipo.fields.precio}</td>
+                <td class="importe">${importe.toFixed(2)}</td>
+                <td>
+                    <button class="btn btn-danger btn-eliminar" data-id="${equipo.pk}"> <i class="bi bi-trash"></i></button>
+                </td>
+            </tr>
+            `;
+        });
+        document.getElementById('equiposCarrito').innerHTML = tablaEquipos;
+        const igv = subtotal * 0.18;
+        const total = subtotal + igv;
+        document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+        document.getElementById('igv').textContent = igv.toFixed(2);
+        document.getElementById('total').textContent = total.toFixed(2);
+        document.querySelectorAll('.cantidad').forEach(function(input) {
+          input.addEventListener('change', function(event) {
+            const nuevaCantidad = parseInt(event.target.value);
+            if (!isNaN(nuevaCantidad) && nuevaCantidad >= 1) {
+              const equipoId = parseInt(event.target.getAttribute('data-id'));
+              const equipo = equiposAgregados.find(e => e.pk === equipoId);
+              equipo.cantidad = nuevaCantidad;
+              const importe = equipo.fields.precio * nuevaCantidad;
+              event.target.parentElement.nextElementSibling.nextElementSibling.textContent = importe.toFixed(2);
+              subtotal = 0;
+              document.querySelectorAll('.importe').forEach(function(importeTd) {
+                subtotal += parseFloat(importeTd.textContent);
+              });
+              const nuevoIgv = subtotal * 0.18;
+              const nuevoTotal = subtotal + nuevoIgv;
+      
+              document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+              document.getElementById('igv').textContent = nuevoIgv.toFixed(2);
+              document.getElementById('total').textContent = nuevoTotal.toFixed(2);
+            }
+          });
+        });
+      
+        $('#carritoModal').modal('show');
+        document.querySelectorAll('.btn-eliminar').forEach(function(btn) {
+            btn.addEventListener('click', function(event) {
+                console.log("Se hizo clic en el botón de eliminar");
+                const equipoId = parseInt(event.target.getAttribute('data-id'));
+                event.target.closest('tr').remove();
+                equiposAgregados = equiposAgregados.filter(equipo => equipo.pk !== equipoId);
+                recalcularTotal();
+            });
+        });
+        document.getElementById('guardarBtn').addEventListener('click', function() {
+            const nombreCliente = document.getElementById('clientes').value;
+            const emailCliente = document.getElementById('clienteEmail').value;
+            const numeroTarjeta = document.getElementById('tarjetaNumero').value;
+            const fechaExpiracion = document.getElementById('tarjetaExpiracion').value;
+        
+            const tablaEquipos = document.getElementById('equiposCarrito');
+            const filasEquipos = tablaEquipos.querySelectorAll('tbody tr');
+        
+            const equiposData = []; 
+            filasEquipos.forEach(function(fila) {
+                const idEquipo = fila.getAttribute('data-id');
+                const cantidad = fila.cells[2].querySelector('.cantidad').value;
+                const equipo = {
+                    id: idEquipo,
+                    cantidad: cantidad  
+                };
+                equiposData.push(equipo);
+            });
+        
+            const datosVenta = {
+                nombre_cliente: nombreCliente,
+                email_cliente: emailCliente,
+                numero_tarjeta: numeroTarjeta,
+                fecha_expiracion: fechaExpiracion,
+                equipos: equiposData
+            };
+            fetch('/appventas/guardar-venta/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}' 
+                },
+                body: JSON.stringify(datosVenta) 
+            })
+            .then(response => response.json()) 
+            .then(data => {
+                swal({
+                    title: "Sistema de Ventas.",
+                    text: data.mensaje,
+                    icon: "info",
+                    button: {
+                        text: "Ok",
+                        className: "btn btn-info" 
+                    }
+                }).then(() => {
+                    
+                    tablaEquipos.innerHTML = '';
+                    document.getElementById('clientes').value = '';
+                    document.getElementById('clienteEmail').value = '';
+                    document.getElementById('tarjetaNumero').value = '';
+                    document.getElementById('tarjetaExpiracion').value = '';
+                    $('#carritoModal').modal('hide');
+                   
+                    window.location.href = data.redirect_url;
+                });
+
+
+            })
+            .catch(error => {
+                console.error('Error al guardar los datos:', error);
+                alert('Error al guardar los datos. Por favor, inténtelo de nuevo.');
+            });
+        });
+      });
+    function recalcularTotal() {
+        let subtotal = 0;
+        equiposAgregados.forEach(function(equipo) {
+            const cantidad = equipo.cantidad || 1;
+            const importe = equipo.fields.precio * cantidad;
+            subtotal += importe;
+        });
+        const igv = subtotal * 0.18;
+        const total = subtotal + igv;
+        document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+        document.getElementById('igv').textContent = igv.toFixed(2);
+        document.getElementById('total').textContent = total.toFixed(2);
+    }
+    function obtenerClientes() {
+        fetch('/appventas/obtener-clientes/')
+        .then(response => response.json())
+        .then(clientes => {
+            const select = document.getElementById('clientes'); 
+            clientes.forEach(cliente => {
+                const option = document.createElement('option');
+                option.value = cliente.id;
+                option.textContent = cliente.nombre;
+                select.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.log('Error al obtener la lista de clientes:', error);
+        });
+    }
+</script>
+
+{% endblock contenidoQueCmabia %}
